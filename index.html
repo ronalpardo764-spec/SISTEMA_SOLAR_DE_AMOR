@@ -70,12 +70,12 @@
             pointer-events: none;
         }
 
-        #reproductor-musica {
+        .reproductor-musica {
             position: absolute;
             bottom: 15px;
             right: 15px;
             z-index: 1000;
-            opacity: 0.8;
+            opacity: 0.85;
             height: 35px;
         }
     </style>
@@ -84,7 +84,7 @@
 </head>
 <body>
 
-    <!-- RUTA ACTUALIZADA A CANCION.MP3 -->
+    <!-- ELEMENTO DE AUDIO DE RESPALDO -->
     <audio id="musica-fondo" loop preload="auto" controls class="reproductor-musica">
         <source src="cancion.mp3" type="audio/mpeg">
     </audio>
@@ -110,6 +110,7 @@
         let scene, camera, renderer, controls;
         let solMesh;
         let planetas = [];
+        let audioContext;
 
         const frasesPlanetas = [
             "Te amo ❤️", "Eres mi vida ✨", "Mi amor eterno 💖", "Siempre juntos 💍",
@@ -118,15 +119,25 @@
         ];
 
         document.getElementById('btn-iniciar').addEventListener('click', function() {
+            // 1. Activar Contexto de Audio del navegador (solución para PC)
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            // 2. Reproducir la canción
             const audio = document.getElementById('musica-fondo');
             if (audio) {
                 audio.volume = 1.0;
                 audio.play().then(() => {
-                    console.log("Música sonando correctamente.");
+                    console.log("¡Música sonando!");
                 }).catch(err => {
                     console.log("Error al reproducir audio:", err);
                 });
             }
+
             iniciarCarga();
         });
 
