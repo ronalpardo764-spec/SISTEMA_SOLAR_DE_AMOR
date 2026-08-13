@@ -69,25 +69,11 @@
             z-index: 100; 
             pointer-events: none;
         }
-
-        .reproductor-musica {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            z-index: 1000;
-            opacity: 0.85;
-            height: 35px;
-        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-
-    <!-- ELEMENTO DE AUDIO DE RESPALDO -->
-    <audio id="musica-fondo" loop preload="auto" controls class="reproductor-musica">
-        <source src="cancion.mp3" type="audio/mpeg">
-    </audio>
 
     <div id="canvas-container"></div>
 
@@ -110,7 +96,8 @@
         let scene, camera, renderer, controls;
         let solMesh;
         let planetas = [];
-        let audioContext;
+        let miAudio = new Audio('cancion.mp3');
+        miAudio.loop = true;
 
         const frasesPlanetas = [
             "Te amo ❤️", "Eres mi vida ✨", "Mi amor eterno 💖", "Siempre juntos 💍",
@@ -119,24 +106,13 @@
         ];
 
         document.getElementById('btn-iniciar').addEventListener('click', function() {
-            // 1. Activar Contexto de Audio del navegador (solución para PC)
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-
-            // 2. Reproducir la canción
-            const audio = document.getElementById('musica-fondo');
-            if (audio) {
-                audio.volume = 1.0;
-                audio.play().then(() => {
-                    console.log("¡Música sonando!");
-                }).catch(err => {
-                    console.log("Error al reproducir audio:", err);
-                });
-            }
+            // Reproducción forzada directa
+            miAudio.play().then(() => {
+                console.log("¡Audio reproduciéndose perfectamente!");
+            }).catch(error => {
+                alert("Atención: El navegador bloqueó el audio o el archivo 'cancion.mp3' está dañado. Revisa subirlo de nuevo.");
+                console.error("Error reproduciendo audio:", error);
+            });
 
             iniciarCarga();
         });
