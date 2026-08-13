@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestro Sistema Solar ❤️</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #020208; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh;
+            touch-action: manipulation;
+        }
+        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        #ui {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center; z-index: 10;
+            width: 90%;
+        }
+        .btn-love {
+            padding: 14px 32px; 
+            border-radius: 30px; 
+            border: none;
+            background: linear-gradient(45deg, #ff0055, #ffaa00); 
+            color: white; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.8); 
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-love:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 170, 0, 0.9); }
+
+        #loader {
+            display: none; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center; z-index: 10;
+            width: 80%;
+        }
+        .spinner {
+            width: 60px; height: 60px; 
+            border: 4px solid rgba(255, 0, 85, 0.2);
+            border-top: 4px solid #ffaa00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #porcentaje { font-size: 24px; color: #ffaa00; }
+        #subtitulo-carga { font-size: 16px; margin-top: 6px; color: #ffcccc; }
+
+        #mensaje-amor {
+            display: none; 
+            position: absolute; 
+            top: 4%; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 500px; 
+            background: transparent; 
+            padding: 0; 
+            color: #fff; 
+            font-size: 22px; 
+            text-align: center; 
+            font-weight: bold;
+            text-shadow: 0 0 12px rgba(255, 0, 85, 1), 0 0 25px rgba(255, 170, 0, 0.8);
+            z-index: 100; 
+            pointer-events: none;
+        }
+    </style>
+    <!-- Importar Three.js y OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <!-- REPRODUCTOR DE MÚSICA -->
+    <audio id="musica-fondo" loop playsinline preload="auto">
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui">
+        <button class="btn-love" onclick="iniciarCarga()">Explorar nuestro universo ❤️</button>
+    </div>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="porcentaje">0%</div>
+        <div id="subtitulo-carga">Alineando los planetas de nuestro amor... 🪐✨</div>
+    </div>
+
+    <div id="mensaje-amor">
+        ☀️ Eres el centro de mi universo ❤️<br>
+        <span style="font-size: 14px; font-weight: normal; color: #ffd700;">(Gira y acerca la pantalla para explorar los planetas)</span>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls;
+        let solMesh, solLuz;
+        let planetas = [];
+
+        // Frases para los planetas
+        const frasesPlanetas = [
+            "Te amo ❤️", "Eres mi vida ✨", "Mi amor eterno 💖", "Siempre juntos 💍",
+            "Mi lugar favorito eres tú 🌹", "Eres mi sueño hecho realidad 💫",
+            "Cada segundo a tu lado vale la pena 💗", "Amor de mi vida ✨💖"
+        ];
+
+        // Imágenes de los planetas
+        const listaImagenes = [
+            "WhatsApp Image 2026-08-12 at 5.11.50 PM.jpeg",
+            "WhatsApp Image 2026-08-12 at 5.11.52 PM.jpeg",
+            "WhatsApp Image 2026-08-12 at 5.11.51 PM (1).jpeg",
+            "WhatsApp Image 2026-08-12 at 5.11.51 PM.jpeg"
+        ];
+
+        function initThree() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020208, 0.005);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 35, 65);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            crearEstrellasFondo();
+            crearSolCentral();
+            crearSistemaSolar();
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function crearEstrellasFondo() {
+            const numEstrellas = 3000;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(numEstrellas * 3);
+
+            for (let i = 0; i < numEstrellas * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 300;
+                positions[i + 1] = (Math.random() - 0.5) * 300;
+                positions[i + 2] = (Math.random() - 0.5) * 300;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, transparent: true, opacity: 0.8 });
+            scene.add(new THREE.Points(geometry, material));
+        }
+
+        function crearSolCentral() {
+            // Núcleo del Sol
+            const solGeometria = new THREE.SphereGeometry(6, 32, 32);
+            const solMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+            solMesh = new THREE.Mesh(solGeometria, solMaterial);
+            scene.add(solMesh);
+
+            // Luz brillante desde el Sol
+            solLuz = new THREE.PointLight(0xffaa00, 2, 150);
+            scene.add(solLuz);
+
+            // Texto en 3D sobre el Sol
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 128;
+            ctx.font = 'bold 60px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 20;
+            ctx.fillText('TE AMO ❤️', 256, 80);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const spriteSol = new THREE.Sprite(spriteMaterial);
+            spriteSol.scale.set(16, 4, 1);
+            spriteSol.position.y = 9;
+            scene.add(spriteSol);
+        }
+
+        function crearSistemaSolar() {
+            const textureLoader = new THREE.TextureLoader();
+
+            // Combinar fotos y texto en las órbitas
+            const totalOrbitas = 8;
+
+            for (let i = 0; i < totalOrbitas; i++) {
+                const radioOrbita = 14 + (i * 6);
+                const velocidad = 0.005 + (0.002 * (totalOrbitas - i)); // Los más cercanos giran más rápido
+
+                // Dibujar línea de la órbita
+                const orbitaGeometria = new THREE.RingGeometry(radioOrbita - 0.1, radioOrbita + 0.1, 64);
+                const orbitaMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
+                const orbitaMesh = new THREE.Mesh(orbitaGeometria, orbitaMaterial);
+                orbitaMesh.rotation.x = Math.PI / 2;
+                scene.add(orbitaMesh);
+
+                let planetaObj;
+
+                // Alternar entre Fotos y Texto
+                if (i < listaImagenes.length) {
+                    // Planeta con Foto
+                    const url = encodeURIComponent(listaImagenes[i]);
+                    const texture = textureLoader.load(url);
+                    const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                    planetaObj = new THREE.Sprite(spriteMaterial);
+                    planetaObj.scale.set(7, 8.5, 1);
+                } else {
+                    // Planeta con Frase de Amor
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 512;
+                    canvas.height = 128;
+                    ctx.font = 'bold 36px Segoe UI, Arial';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.shadowColor = '#ff0055';
+                    ctx.shadowBlur = 15;
+                    ctx.fillText(frasesPlanetas[i % frasesPlanetas.length], 256, 64);
+
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                    planetaObj = new THREE.Sprite(spriteMaterial);
+                    planetaObj.scale.set(12, 3, 1);
+                }
+
+                const anguloInicial = Math.random() * Math.PI * 2;
+
+                planetas.push({
+                    mesh: planetaObj,
+                    radio: radioOrbita,
+                    angulo: anguloInicial,
+                    velocidad: velocidad
+                });
+
+                scene.add(planetaObj);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (controls) controls.update();
+
+            // Rotación leve del sol
+            if (solMesh) solMesh.rotation.y += 0.005;
+
+            // Mover planetas en sus órbitas
+            planetas.forEach(p => {
+                p.angulo += p.velocidad;
+                p.mesh.position.x = Math.cos(p.angulo) * p.radio;
+                p.mesh.position.z = Math.sin(p.angulo) * p.radio;
+            });
+
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function onWindowResize() {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        function iniciarCarga() {
+            const audio = document.getElementById('musica-fondo');
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch(e => console.log("Audio listo para móvil"));
+            }
+
+            document.getElementById('ui').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            let porcentaje = 0;
+            const elemPorcentaje = document.getElementById('porcentaje');
+
+            const intervalo = setInterval(() => {
+                porcentaje += Math.floor(Math.random() * 8) + 3;
+                if (porcentaje >= 100) {
+                    porcentaje = 100;
+                    clearInterval(intervalo);
+
+                    if (audio) {
+                        audio.play().catch(e => console.log("Error al reproducir audio:", e));
+                    }
+
+                    setTimeout(() => {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('mensaje-amor').style.display = 'block';
+                        initThree();
+                    }, 400);
+                }
+                elemPorcentaje.innerText = porcentaje + '%';
+            }, 120);
+        }
+    </script>
+</body>
+</html>
