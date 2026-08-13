@@ -74,13 +74,11 @@
             pointer-events: none;
         }
     </style>
-    <!-- Importar Three.js y OrbitControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-    <!-- REPRODUCTOR DE MÚSICA -->
     <audio id="musica-fondo" loop playsinline preload="auto">
         <source src="musica.mp3" type="audio/mpeg">
     </audio>
@@ -107,14 +105,12 @@
         let solMesh, solLuz;
         let planetas = [];
 
-        // Frases para los planetas
         const frasesPlanetas = [
             "Te amo ❤️", "Eres mi vida ✨", "Mi amor eterno 💖", "Siempre juntos 💍",
             "Mi lugar favorito eres tú 🌹", "Eres mi sueño hecho realidad 💫",
             "Cada segundo a tu lado vale la pena 💗", "Amor de mi vida ✨💖"
         ];
 
-        // Imágenes de los planetas
         const listaImagenes = [
             "WhatsApp Image 2026-08-12 at 5.11.50 PM.jpeg",
             "WhatsApp Image 2026-08-12 at 5.11.52 PM.jpeg",
@@ -165,17 +161,14 @@
         }
 
         function crearSolCentral() {
-            // Núcleo del Sol
             const solGeometria = new THREE.SphereGeometry(6, 32, 32);
             const solMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
             solMesh = new THREE.Mesh(solGeometria, solMaterial);
             scene.add(solMesh);
 
-            // Luz brillante desde el Sol
             solLuz = new THREE.PointLight(0xffaa00, 2, 150);
             scene.add(solLuz);
 
-            // Texto en 3D sobre el Sol
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 512;
@@ -197,15 +190,12 @@
 
         function crearSistemaSolar() {
             const textureLoader = new THREE.TextureLoader();
-
-            // Combinar fotos y texto en las órbitas
             const totalOrbitas = 8;
 
             for (let i = 0; i < totalOrbitas; i++) {
                 const radioOrbita = 14 + (i * 6);
-                const velocidad = 0.005 + (0.002 * (totalOrbitas - i)); // Los más cercanos giran más rápido
+                const velocidad = 0.005 + (0.002 * (totalOrbitas - i));
 
-                // Dibujar línea de la órbita
                 const orbitaGeometria = new THREE.RingGeometry(radioOrbita - 0.1, radioOrbita + 0.1, 64);
                 const orbitaMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
                 const orbitaMesh = new THREE.Mesh(orbitaGeometria, orbitaMaterial);
@@ -214,16 +204,13 @@
 
                 let planetaObj;
 
-                // Alternar entre Fotos y Texto
                 if (i < listaImagenes.length) {
-                    // Planeta con Foto
                     const url = encodeURIComponent(listaImagenes[i]);
                     const texture = textureLoader.load(url);
                     const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
                     planetaObj = new THREE.Sprite(spriteMaterial);
                     planetaObj.scale.set(7, 8.5, 1);
                 } else {
-                    // Planeta con Frase de Amor
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     canvas.width = 512;
@@ -259,10 +246,8 @@
 
             if (controls) controls.update();
 
-            // Rotación leve del sol
             if (solMesh) solMesh.rotation.y += 0.005;
 
-            // Mover planetas en sus órbitas
             planetas.forEach(p => {
                 p.angulo += p.velocidad;
                 p.mesh.position.x = Math.cos(p.angulo) * p.radio;
@@ -284,11 +269,14 @@
 
         function iniciarCarga() {
             const audio = document.getElementById('musica-fondo');
+            
+            // Fuerza la interacción de audio al dar clic en la pantalla
             if (audio) {
                 audio.play().then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }).catch(e => console.log("Audio listo para móvil"));
+                    // Audio inicializado con éxito
+                }).catch(e => {
+                    console.log("Error de reproducción:", e);
+                });
             }
 
             document.getElementById('ui').style.display = 'none';
@@ -302,10 +290,6 @@
                 if (porcentaje >= 100) {
                     porcentaje = 100;
                     clearInterval(intervalo);
-
-                    if (audio) {
-                        audio.play().catch(e => console.log("Error al reproducir audio:", e));
-                    }
 
                     setTimeout(() => {
                         document.getElementById('loader').style.display = 'none';
