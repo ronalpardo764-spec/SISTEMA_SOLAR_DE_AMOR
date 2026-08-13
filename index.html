@@ -72,8 +72,8 @@
 
         #reproductor-musica {
             position: absolute;
-            bottom: 12px;
-            right: 12px;
+            bottom: 15px;
+            right: 15px;
             z-index: 1000;
             opacity: 0.8;
             height: 35px;
@@ -84,6 +84,7 @@
 </head>
 <body>
 
+    <!-- ARCHIVO DE AUDIO CORREGIDO -->
     <audio id="musica-fondo" loop preload="auto" controls id="reproductor-musica">
         <source src="musica.mp3" type="audio/mpeg">
     </audio>
@@ -116,25 +117,19 @@
             "Cada segundo vale la pena 💗", "Amor de mi vida ✨💖"
         ];
 
+        // Evento directo al hacer clic en el botón
         document.getElementById('btn-iniciar').addEventListener('click', function() {
-            reproducirAudio();
-            iniciarCarga();
-        });
-
-        function reproducirAudio() {
             const audio = document.getElementById('musica-fondo');
             if (audio) {
                 audio.volume = 1.0;
-                let playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log("Audio reproduciéndose con éxito.");
-                    }).catch(error => {
-                        console.log("Intento de reproducción fallido o bloqueado:", error);
-                    });
-                }
+                audio.play().then(() => {
+                    console.log("Música reproducida exitosamente");
+                }).catch(err => {
+                    console.log("Error al reproducir audio:", err);
+                });
             }
-        }
+            iniciarCarga();
+        });
 
         function initThree() {
             const container = document.getElementById('canvas-container');
